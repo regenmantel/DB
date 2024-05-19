@@ -22,7 +22,7 @@ class World extends DB
     {
         if ($this->worldConfig->game->watchtower == "1") {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
@@ -31,7 +31,7 @@ class World extends DB
     {
         if ($this->worldConfig->game->church == "1") {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
@@ -40,7 +40,7 @@ class World extends DB
     {
         if ($this->worldConfig->game->archer == "1") {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
@@ -49,7 +49,7 @@ class World extends DB
     {
         if ($this->worldConfig->game->knight > "0") {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
@@ -58,7 +58,7 @@ class World extends DB
     {
         if ($this->worldConfig->game->militia > "0") {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
