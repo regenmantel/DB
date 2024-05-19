@@ -76,13 +76,22 @@ if (!isset($_SESSION["name"])) {
                 require __DIR__ . "/backend/pages/reports/showSupportReports.php";
                 break;
             case("showReport"):
-                require __DIR__ . "/backend/pages/previewReports/showReport.html";
+                require __DIR__ . "/backend/pages/previewReports/showReport.php";
                 break;
             case("insert"):
-                require __DIR__ . "/backend/pages/insert/insert.html";
+                require __DIR__ . "/backend/pages/insert/insert.php";
                 break;
             case("ranking"):
-                require __DIR__ . "/backend/pages/ranking/ranking.html";
+                require __DIR__ . "/backend/pages/ranking/ranking.php";
+                break;
+            case("players"):
+                require __DIR__ . "/backend/pages/ranking/players.php";
+                break;
+            case("allys"):
+                require __DIR__ . "/backend/pages/ranking/allys.php";
+                break;
+            case("dailys"):
+                require __DIR__ . "/backend/pages/ranking/dailys.php";
                 break;
             case("dbRanking"):
                 require __DIR__ . "/backend/pages/ranking/dbRanking.html";
@@ -142,7 +151,7 @@ if (!isset($_SESSION["name"])) {
                 require __DIR__ . "/backend/pages/graphics/interactiveMap.html";
                 break;
             case("leader"):
-                require __DIR__ . "/backend/pages/leader/leader.html";
+                require __DIR__ . "/backend/pages/leader/leader.php";
                 break;
             case("improvement"):
                 require __DIR__ . "/backend/pages/footer/improvement.php";
