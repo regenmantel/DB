@@ -5,11 +5,13 @@ if (!isset($_SESSION["name"]) or !isset($_POST)) return;
 
 require dirname(__DIR__, 2) . "/backend/classes/DB.php";
 require dirname(__DIR__, 2) . "/backend/classes/World_User.php";
+require dirname(__DIR__, 2) . "/backend/classes/World.php";
 require dirname(__DIR__, 2) . "/backend/classes/Tribe.php";
 require dirname(__DIR__, 2) . "/backend/classes/General.php";
 require dirname(__DIR__, 2) . "/backend/classes/DataTables.php";
 
 $World_User = new World_User($_SESSION["name"], $_SESSION["world"]);
+$World = new World($World_User->getWorld());
 
 if (!$World_User->isActivated()) {
     General::redirectHeader();
@@ -19,10 +21,9 @@ $DB = new DB();
 $DB->connectTo($World_User->getWorldVersion());
 
 $bindParams = [];
-$Query = "SELECT attacker_nick,attacker_id,defender_nick,defender_id,bericht,id,fighttime FROM `reports` WHERE 1 = 1";
+$Query = "SELECT attacker_nick,attacker_id,defender_nick,defender_id,bericht,id,fighttime,size,troops_att_spear,troops_att_sword,troops_att_axe,troops_att_archer,troops_att_spy,troops_att_light,troops_att_marcher,troops_att_heavy,troops_att_ram,troops_att_catapult,troops_att_priest,troops_att_knight,troops_att_snob,troops_attl_spear,troops_attl_sword,troops_attl_axe,troops_attl_archer,troops_attl_spy,troops_attl_light,troops_attl_marcher,troops_attl_heavy,troops_attl_ram,troops_attl_catapult,troops_attl_priest,troops_attl_knight,troops_attl_snob,troops_def_spear,troops_def_sword,troops_def_axe,troops_def_archer,troops_def_spy,troops_def_light,troops_def_marcher,troops_def_heavy,troops_def_ram,troops_def_catapult,troops_def_priest,troops_def_knight,troops_def_snob,troops_defl_spear,troops_defl_sword,troops_defl_axe,troops_defl_archer,troops_defl_spy,troops_defl_light,troops_defl_marcher,troops_defl_heavy,troops_defl_ram,troops_defl_catapult,troops_defl_priest,troops_defl_knight,troops_defl_snob,catapult_before,catapult_after,wall_before,wall_after,attacker_village,attacker_coords,attacker_continent,defender_village,defender_coords,defender_continent FROM `reports` WHERE 1 = 1";
 
-
-if(!$World_User->seeAllReports()){
+if (!$World_User->seeAllReports()) {
     $playerID = $World_User->getPlayerID();
     $Query .= " AND (attacker_id = '$playerID' OR defender_id = '$playerID')";
 }
@@ -61,7 +62,7 @@ if (strlen($coordType) > 0) {
             $bindParams[] = 1;
             $Query .= " AND (attacker_coordtyp = ? OR defender_coordtyp = ?)";
             break;
-        case("Def"):
+        case ("Def"):
             $bindParams[] = 0;
             $bindParams[] = 0;
             $Query .= " AND (attacker_coordtyp = ? OR defender_coordtyp = ?)";
@@ -129,7 +130,7 @@ if (intval($moodUnder) > 0) {
 
 $dateBefore = $_POST["dateBefore"] ?? "";
 if (strlen($dateBefore) > 0) {
-    $d = DateTime::createFromFormat('Y-m-d', $dateBefore);
+    $d = DateTime::createFromFormat('d-m-y', $dateBefore);
     if ($d) {
         $bindParams[] = $d->getTimestamp();
         $Query .= " AND fighttime < ?";
@@ -138,7 +139,7 @@ if (strlen($dateBefore) > 0) {
 
 $dateAfter = $_POST["dateAfter"] ?? "";
 if (strlen($dateAfter) > 0) {
-    $d = DateTime::createFromFormat('Y-m-d', $dateAfter);
+    $d = DateTime::createFromFormat('d-m-y', $dateAfter);
     if ($d) {
         $bindParams[] = $d->getTimestamp();
         $Query .= " AND fighttime > ?";
@@ -152,15 +153,15 @@ if (strlen($cataTarget) > 0) {
 }
 
 
-$Query .= " ORDER BY ".DataTables::sortReportTable($_POST["order"][0]["column"]);
+$Query .= " ORDER BY " . DataTables::sortReportTable($_POST["order"][0]["column"]);
 $Query .= DataTables::sortBy($_POST["order"][0]["dir"]);
 
 if (isset($_POST["order"][1]["column"])) {
-    $Query .= " ,".DataTables::sortReportTable($_POST["order"][1]["column"]);
+    $Query .= " ," . DataTables::sortReportTable($_POST["order"][1]["column"]);
     $Query .= DataTables::sortBy($_POST["order"][1]["dir"]);
 }
 if (isset($_POST["order"][2]["column"])) {
-    $Query .= " ,".DataTables::sortReportTable($_POST["order"][2]["column"]);
+    $Query .= " ," . DataTables::sortReportTable($_POST["order"][2]["column"]);
     $Query .= DataTables::sortBy($_POST["order"][2]["dir"]);
 }
 
@@ -186,7 +187,81 @@ $stmt->execute($bindParams);
 
 $rows["data"] = [];
 
+//troops_attl_spear,troops_attl_sword,troops_attl_axe,troops_attl_archer,troops_attl_spy,troops_attl_light,troops_attl_marcher,troops_attl_heavy,troops_attl_ram,troops_attl_catapult,troops_attl_priest,troops_attl_knight,troops_attl_snob,
+
 foreach ($stmt->get_result() as $row) {
+    $sumLost = $row["troops_attl_spear"] +
+        $row["troops_attl_sword"] +
+        $row["troops_attl_axe"] +
+        ($World->isArcherAvailable() ? $row["troops_attl_archer"] : 0) +
+        $row["troops_attl_light"] +
+        ($World->isArcherAvailable() ? $row["troops_attl_marcher"] : 0) +
+        $row["troops_attl_heavy"] +
+        $row["troops_attl_ram"] +
+        $row["troops_attl_catapult"] +
+        $row["troops_attl_knight"] +
+        $row["troops_attl_snob"];
+
+    $sum = $row["troops_att_spear"] +
+        $row["troops_att_sword"] +
+        $row["troops_att_axe"] +
+        ($World->isArcherAvailable() ? $row["troops_att_archer"] : 0) +
+        $row["troops_att_light"] +
+        ($World->isArcherAvailable() ? $row["troops_att_marcher"] : 0) +
+        $row["troops_att_heavy"] +
+        $row["troops_att_ram"] +
+        $row["troops_att_catapult"] +
+        $row["troops_att_knight"] +
+        $row["troops_att_snob"];
+
+    if (($sumLost == 0) && ($row["troops_attl_spy"] == 0)) {
+        $report_result = "<img src='assets/images/inno/report/green.png'>";
+    } elseif (($sumLost == $sum && $row["troops_attl_spy"] == $row["troops_att_spy"]) && ($row['catapult_before'] != $row['catapult_after'] || $row['wall_before'] != $row['wall_after'])) {
+        $report_result = "<img src='assets/images/inno/report/redyellow.png'>";
+    } elseif (($sum == $sumLost) && ($row["troops_attl_spy"] == $row["troops_att_spy"])) {
+        $report_result = "<img src='assets/images/inno/report/red.png'>";
+    } elseif (($sumLost == 0) && ($row["troops_attl_spy"] == $row["troops_att_spy"])) {
+        $report_result = "<img src='assets/images/inno/report/green.png'>";
+    } elseif (($sumLost == 0) && ($sum == 0) && ($row["troops_attl_spy"] != $row["troops_att_spy"])) {
+        $report_result = "<img src='assets/images/inno/report/yellow.png'>";
+    } elseif (($sumLost == $sum) && ($row["troops_attl_spy"] < $row["troops_att_spy"])) {
+        $report_result = "<img src='assets/images/inno/report/redblue.png'>";
+    } elseif (($sum == $sumLost) && ($row["troops_attl_spy"] == $row["troops_att_spy"])) {
+        $report_result = "<img src='assets/images/inno/report/red.png'>";
+    } elseif ($sumLost > 0) {
+        $report_result = "<img src='assets/images/inno/report/yellow.png'>";
+    } else {
+        $report_result = "";
+    }
+
+    if ($row["size"] == 2 or $row["size"] == 1) {
+        $attack_size = "<img src='assets/images/inno/icons/attack_small.png'>";
+    } elseif ($row["size"] == 3) {
+        $attack_size = "<img src='assets/images/inno/icons/attack_medium.png'>";
+    } elseif ($row["size"] == 4) {
+        $attack_size = "<img src='assets/images/inno/icons/attack_large.png'>";
+    } else {
+        $attack_size = "<img src='assets/images/inno/icons/attack.png'>";
+    }
+
+    if ($row["troops_att_spy"] > 0) {
+        $attack_spy = "<img src='assets/images/inno/units/spy.png'> ";
+    } else {
+        $attack_spy = "";
+    }
+
+    if ($row["troops_att_snob"] > 0) {
+        $attack_snob = "<img src='assets/images/inno/units/ag.png'> ";
+    } else {
+        $attack_snob = "";
+    }
+
+    if ($row["troops_att_knight"] > 0) {
+        $attack_knight = " <img src='assets/images/inno/units/pala.png'> ";
+    } else {
+        $attack_knight = "";
+    }
+
     $attackerUrl = "/playerInfo?ID={$row["attacker_id"]}";
     $attackerUrl = "<a class='previewPlayerinfo' href='$attackerUrl' target='_blank'> {$row["attacker_nick"]} </a>";
 
@@ -194,19 +269,18 @@ foreach ($stmt->get_result() as $row) {
     $defenderUrl = "<a class='previewPlayerinfo' href='$defenderUrl' target='_blank'> {$row["defender_nick"]} </a>";
 
     $reportUrl = "/showReport?ID={$row["id"]}";
-    $reportUrl = "<a href='$reportUrl' target='_blank'> {$row["bericht"]} </a>
+    $reportUrl = "$report_result <a href='$reportUrl' target='_blank'>{$row["attacker_nick"]} ({$row["attacker_village"]} {$row["attacker_coords"]} K{$row["attacker_continent"]}) greift {$row["defender_village"]} {$row["defender_coords"]} K{$row["defender_continent"]} an.<div style='float:right;'>$attack_size $attack_spy $attack_snob $attack_knight</div></a>
                     <div class='preview'>
-					<object data='/showReport?id={$row["id"]}=preview' class='previewBox'>
+					<object data='/showReport?id={$row["id"]}=preview' class='previewBox>
 					</object></div>";
-    $fightTime = date("h:i:s d.m.Y", $row["fighttime"]);
+    $fightTime = date("d.m.y H:i:s", $row["fighttime"]);
     $deleteButton = "<input type='checkbox' class='deleteReport' id='{$row["id"]}'>";
 
-    if($World_User->isSF() || $World_User->isMod()){
-        $rows["data"][] = array($attackerUrl, $defenderUrl, $reportUrl, $fightTime,$deleteButton);
-    }else{
+    if ($World_User->isSF() || $World_User->isMod()) {
+        $rows["data"][] = array($attackerUrl, $defenderUrl, $reportUrl, $fightTime, $deleteButton);
+    } else {
         $rows["data"][] = array($attackerUrl, $defenderUrl, $reportUrl, $fightTime);
     }
-
 }
 
 $stmt->close();
