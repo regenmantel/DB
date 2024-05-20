@@ -1,11 +1,13 @@
 <?php
-
 require_once "DB.php";
+require_once "Inno.php";
 require_once "Utilities.php";
+
 class User extends DB
 {
     private $name;
     public $exists = false;
+    public $userdata;
     private $DB_Account;
 
     function __construct($user = "")
@@ -17,7 +19,8 @@ class User extends DB
         $stmt->execute();
         $stmt->bind_result($name, $password, $design, $lastLogin, $activated, $register, $map, $question, $answer);
         while ($stmt->fetch()) {
-            $this->DB_Account = array("Name" => $name,
+            $this->DB_Account = array(
+                "Name" => $name,
                 "password" => $password,
                 "design" => $design,
                 "lastLogin" => $lastLogin,
@@ -25,7 +28,8 @@ class User extends DB
                 "register" => $register,
                 "map" => $map,
                 "question" => $question,
-                "answer" => $answer);
+                "answer" => $answer
+            );
         }
         if (is_array($this->DB_Account)) {
             $this->exists = true;
@@ -65,12 +69,16 @@ class User extends DB
 
     function isActivated(): bool
     {
-        if($this->DB_Account["activated"] == 1){
+        if ($this->DB_Account["activated"] == 1) {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
 
-
+    function setVal($name, $value)
+    {
+        $_SESSION[$name] = $value;
+        return true;
+    }
 }
