@@ -1,5 +1,6 @@
 <?php
 require_once "DB.php";
+require_once "Inno.php";
 
 class World_User extends DB
 {
@@ -13,9 +14,10 @@ class World_User extends DB
         $stmt = $this->conn->prepare("SELECT * FROM `Allgemein`.`userrollen` WHERE name = ? and world = ?");
         $stmt->bind_param("ss", $user, $world);
         $stmt->execute();
-        $stmt->bind_result($name, $world, $version, $playerID, $tribeID, $level, $mod, $off, $def, $reports, $attacks, $uvActive, $uvPlayerID);
+        $stmt->bind_result($name, $world, $version, $playerID, $tribeID, $level, $mod, $off, $def, $reports, $attacks, $uvActive, $uvPlayerID, $lastLogin);
         while ($stmt->fetch()) {
-            $this->World_Account = array("Name" => $name,
+            $this->World_Account = array(
+                "Name" => $name,
                 "world" => $world,
                 "version" => $version,
                 "worldVersion" => $world . "-" . $version,
@@ -28,7 +30,9 @@ class World_User extends DB
                 "reports" => $reports,
                 "attacks" => $attacks,
                 "uvActive" => $uvActive,
-                "uvPlayerID" => $uvPlayerID);
+                "uvPlayerID" => $uvPlayerID,
+                "lastLogin" => $lastLogin
+            );
             $this->exists = true;
             $this->name = $user;
         }
@@ -67,6 +71,22 @@ class World_User extends DB
         }
     }
 
+    function getUsersDBWorlds($name): array
+    {
+        $return = [];
+        $query = $this->query("SELECT world FROM `userrollen` WHERE name = '$name' AND level > 0");
+
+        $activeWorlds = Inno::getActiveWorlds();
+
+        foreach ($query as $row) {
+            if (in_array($row['world'], $activeWorlds)) {
+                $return[] = $row['world'];
+            }
+        }
+
+        return $return;
+    }
+
     function getWorldVersion()
     {
         return $this->World_Account["worldVersion"];
@@ -95,6 +115,11 @@ class World_User extends DB
     function getTribeID()
     {
         return $this->World_Account["tribeID"];
+    }
+
+    function getLastLogin()
+    {
+        return $this->World_Account["lastLogin"];
     }
 
     function isMod(): bool
@@ -167,7 +192,7 @@ class World_User extends DB
         return $cookie;
     }
 
-    function loadCookie($cookie): bool|array
+    function loadCookie($cookie): bool | array
     {
         $bindParams = [$cookie];
         $Query = "SELECT * FROM `cookies` WHERE cookie = ?";
@@ -181,25 +206,26 @@ class World_User extends DB
         return $result ?? false;
     }
 
-    function seeAllAttacks() : bool
+    function seeAllAttacks(): bool
     {
-        if($this->World_Account["attacks"] == 1){
+        if ($this->World_Account["attacks"] == 1) {
             return $this->getName();
-        }else{
+        } else {
             return false;
         }
     }
 
-    function seeAllReports() : bool
+    function seeAllReports(): bool
     {
-        if($this->World_Account["reports"] == 1){
+        if ($this->World_Account["reports"] == 1) {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
 
-    function addImprovement($improvement){
+    function addImprovement($improvement)
+    {
         $stmt = $this->conn->prepare("INSERT INTO `vorschlag` (user,vorschlag) VALUES ('{$this->getName()}',?)");
         $stmt->execute([$improvement]);
     }
@@ -208,8 +234,8 @@ class World_User extends DB
     {
         $return = [];
         $query = $this->query("SELECT * FROM `vorschlag`");
-        foreach ($query as $improvement){
-            $return[] = [$improvement["user"],$improvement["vorschlag"],$improvement["answer"]];
+        foreach ($query as $improvement) {
+            $return[] = [$improvement["user"], $improvement["vorschlag"], $improvement["answer"]];
         }
         return $return;
     }
