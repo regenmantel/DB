@@ -187,8 +187,6 @@ $stmt->execute($bindParams);
 
 $rows["data"] = [];
 
-//troops_attl_spear,troops_attl_sword,troops_attl_axe,troops_attl_archer,troops_attl_spy,troops_attl_light,troops_attl_marcher,troops_attl_heavy,troops_attl_ram,troops_attl_catapult,troops_attl_priest,troops_attl_knight,troops_attl_snob,
-
 foreach ($stmt->get_result() as $row) {
     $sumLost = $row["troops_attl_spear"] +
         $row["troops_attl_sword"] +
