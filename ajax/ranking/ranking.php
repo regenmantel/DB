@@ -15,8 +15,10 @@ if(!$World_User->isActivated()){
 
 $Players = new Players($World_User->getWorld());
 $Return["playerRanking"] = $Players->getLimitPlayersData(10);
+$Return["playerBashis"] = $Players->getLimitPlayersBashis(10);
 
 $Tribes = new Tribes($World_User->getWorld());
 $Return["tribeRanking"] = $Tribes->getLimitTribeData(10);
+$Return["tribeBashis"] = $Tribes->getLimitTribeBashis(10);
 
 echo json_encode($Return);
